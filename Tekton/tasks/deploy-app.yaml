@@ -8,13 +8,21 @@ metadata:
 spec:
   params:
     - name: yaml-location
-      default: deploy.yaml
+      default: infra/deploy.yaml
     - name: command
       default: apply
+    - name: deploy-name
+    - name: deploy-version
   workspaces:
     - name: source
       mountpath: /source
   steps:
+    - name: update-yaml
+      image: alpine
+      script: |
+        #!/usr/bin/env bash
+        sed -i -e s;DEPLOY_NAME;$(params.deploy-name);g $(params.yaml-location)
+        sed -i -e s;DEPLOY_VERSION;$(params.deploy-version);g $(params.yaml-location)
     - name: deploy-new-app
       image: lachlanevenson/k8s-kubectl
       command: ["kubectl"]

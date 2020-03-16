@@ -54,5 +54,10 @@ spec:
       workspaces:
         - name: source
           workspace: workspace
+      params:
+        - name: deploy-name
+          value: "$(params.git-repo-name)"
+        - name: deploy-version
+          value: "$(params.branch)"
       runAfter:
         - build-and-push
