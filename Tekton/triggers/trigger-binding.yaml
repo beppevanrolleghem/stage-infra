@@ -11,3 +11,5 @@ spec:
     value: $(body.repository.clone_url)
   - name: gitreponame
     value: $(body.repository.name)
+  - name: pipelinename
+    value: "pipeline for commit $(body.)"

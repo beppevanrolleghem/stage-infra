@@ -12,11 +12,13 @@ spec:
       description: The git repository url
     - name: gitreponame
       description: the name of the git repository
+    - name: pipelinename
+      description: name the pipelinerun will have
   resourcetemplates:
     - apiVersion: tekton.dev/v1alpha1
       kind: PipelineRun
       metadata:
-        name: application-pipeline-run
+        name: $(inputs.params.pipelinename)
       spec:
         serviceAccountName: service-acc
         pipelineRef:

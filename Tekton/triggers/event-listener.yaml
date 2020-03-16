@@ -12,7 +12,6 @@ spec:
         - name: github-trigger-binding
       template:
         name: github-trigger-template
-
 ---
 apiVersion: v1
 kind: Service

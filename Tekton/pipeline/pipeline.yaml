@@ -28,6 +28,13 @@ spec:
     - name: build-and-push
       taskRef:
         name: build-and-push
+      conditions:
+        - conditionRef: "file-exists"
+          params:
+            - name: "left"
+              value: "stage-infra"
+            - name: "right"
+              value: "$(inputs.params.git-repo-name)"
       runAfter:
         - clone
       workspaces:

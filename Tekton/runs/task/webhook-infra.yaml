@@ -1,0 +1,27 @@
+---
+# https://medium.com/@nikhilthomas1/cloud-native-cicd-on-openshift-with-openshift-pipelines-tektoncd-pipelines-part-3-github-1db6dd8e8ca7
+apiVersion: tekton.dev/v1alpha1
+kind: TaskRun
+metadata:
+  name: create-repo-webhook-infra
+spec:
+  taskRef:
+    name: create-webhook
+  inputs:
+    params:
+    - name: GitHubOrg
+      value: "beppevanrolleghem"
+    - name: GitHubUser
+      value: "beppevanrolleghem"
+    - name: GitHubRepo
+      value: "stage-infra"
+    - name: GitHubSecretName
+      value: webhook-secret
+    - name: GitHubAccessTokenKey
+      value: token
+    - name: GitHubSecretStringKey
+      value: secret
+    - name: ExternalDomain
+      value: "104.155.67.175:8080"
+  timeout: 1000s
+  serviceAccountName: service-acc
