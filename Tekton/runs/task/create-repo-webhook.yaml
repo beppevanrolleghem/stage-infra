@@ -4,7 +4,6 @@ apiVersion: tekton.dev/v1alpha1
 kind: TaskRun
 metadata:
   name: create-repo-webhook
-  #namespace: stage-tekton-pipeline
 spec:
   taskRef:
     name: create-webhook

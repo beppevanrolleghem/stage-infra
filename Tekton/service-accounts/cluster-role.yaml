@@ -12,7 +12,6 @@ rules:
       - "networking.k8s.io"
       - "extensions"
       - "tekton.dev"
-# deze zullen we ook moeten aanpassen elke pipeline die we maken, maar, deze pipelines zijn nu specifiek per branch, dus dit zou geen probleem leveren.
     resources:
       - pods
       - serviceaccounts

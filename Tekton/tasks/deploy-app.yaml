@@ -3,8 +3,7 @@
 apiVersion: tekton.dev/v1alpha1
 kind: Task
 metadata:
-  name: execute-yaml
-  #namespace: stage-tekton-pipeline
+  name: deploy-app
 spec:
   params:
     - name: yaml-location

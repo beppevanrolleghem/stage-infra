@@ -8,11 +8,6 @@ spec:
   serviceAccountName: service-acc
   triggers:
     - name: github
-      # interceptors:
-      #   - github:
-      #       eventTypes:
-      #         - pull_request
-      #         - push
       bindings:
         - name: github-trigger-binding
       template:
