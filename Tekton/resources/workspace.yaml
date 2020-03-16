@@ -4,6 +4,7 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: workspace
+  namespace: tekton-pipeline-1
 spec:
   accessModes:
     - ReadWriteOnce

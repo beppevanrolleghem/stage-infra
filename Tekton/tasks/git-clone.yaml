@@ -3,6 +3,7 @@ apiVersion: tekton.dev/v1alpha1
 kind: Task
 metadata:
   name: git-clone
+  namespace: tekton-pipeline-1
 spec:
   workspaces:
     - name: output
@@ -50,17 +51,17 @@ spec:
             rm -rf "$CHECKOUT_DIR"/..?*
           fi
         }
-        if [[ "$(inputs.params.deleteExisting)" == "true" ]] ; then
+        if [[ "$(params.deleteExisting)" == "true" ]] ; then
           cleandir
           ls -lah "$CHECKOUT_DIR"
         fi
         /ko-app/git-init \
-          -url "$(inputs.params.url)" \
-          -revision "$(inputs.params.revision)" \
+          -url "$(params.url)" \
+          -revision "$(params.revision)" \
           -path "$CHECKOUT_DIR" \
-          -sslVerify "$(inputs.params.sslVerify)" \
-          -submodules "$(inputs.params.submodules)" \
-          -depth "$(inputs.params.depth)"
+          -sslVerify "$(params.sslVerify)" \
+          -submodules "$(params.submodules)" \
+          -depth "$(params.depth)"
         cd "$CHECKOUT_DIR"
         RESULT_SHA="$(git rev-parse HEAD | tr -d '\n')"
         EXIT_CODE="$?"

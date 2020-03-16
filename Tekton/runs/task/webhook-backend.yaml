@@ -4,6 +4,7 @@ apiVersion: tekton.dev/v1alpha1
 kind: TaskRun
 metadata:
   name: create-repo-webhook-backend
+  namespace: tekton-pipeline-1
 spec:
   taskRef:
     name: create-webhook
@@ -16,12 +17,12 @@ spec:
     - name: GitHubRepo
       value: "stage-backend"
     - name: GitHubSecretName
-      value: webhook-secret
+      value: github-secret
     - name: GitHubAccessTokenKey
       value: token
     - name: GitHubSecretStringKey
       value: secret
     - name: ExternalDomain
-      value: "104.155.67.175:8080"
+      value: "35.189.243.0:8080"
   timeout: 1000s
   serviceAccountName: service-acc

@@ -3,6 +3,7 @@ apiVersion: tekton.dev/v1alpha1
 kind: TriggerTemplate
 metadata:
   name: github-trigger-template
+  namespace: tekton-pipeline-1
 spec:
   params:
     - name: gitrevision
@@ -12,13 +13,11 @@ spec:
       description: The git repository url
     - name: gitreponame
       description: the name of the git repository
-    - name: pipelinename
-      description: name the pipelinerun will have
   resourcetemplates:
     - apiVersion: tekton.dev/v1alpha1
       kind: PipelineRun
       metadata:
-        name: $(inputs.params.pipelinename)
+        generateName: github-pipeline-run-
       spec:
         serviceAccountName: service-acc
         pipelineRef:
@@ -29,8 +28,8 @@ spec:
             claimName: workspace
         params:
           - name: git-url
-            value: $(inputs.params.gitrepositoryurl)
+            value: $(params.gitrepositoryurl)
           - name: branch
-            value: $(inputs.params.gitrevision)
+            value: $(params.gitrevision)
           - name: git-repo-name
-            value: $(inputs.params.gitreponame)
+            value: $(params.gitreponame)

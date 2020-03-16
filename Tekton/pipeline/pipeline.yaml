@@ -3,6 +3,7 @@ apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
   name: stage-application-pipeline
+  namespace: tekton-pipeline-1
 spec:
   params:
     - name: git-repo-name
@@ -22,19 +23,19 @@ spec:
           workspace: workspace
       params:
         - name: url
-          value: $(inputs.params.git-url)
+          value: $(params.git-url)
         - name: revision
-          value: $(inputs.params.branch)
+          value: $(params.branch)
     - name: build-and-push
       taskRef:
         name: build-and-push
       conditions:
-        - conditionRef: "file-exists"
+        - conditionRef: "is-not-equal"
           params:
             - name: "left"
               value: "stage-infra"
             - name: "right"
-              value: "$(inputs.params.git-repo-name)"
+              value: "$(params.git-repo-name)"
       runAfter:
         - clone
       workspaces:
@@ -44,9 +45,9 @@ spec:
         - name: context
           value: "src"
         - name: image-name
-          value: "$(inputs.params.git-repo-name)"
+          value: "$(params.git-repo-name)"
         - name: version
-          value: "$(inputs.params.branch)"
+          value: "$(params.branch)"
     - name: deploy-app
       taskRef:
         name: deploy-app

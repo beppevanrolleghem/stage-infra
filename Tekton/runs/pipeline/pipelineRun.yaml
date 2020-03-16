@@ -2,15 +2,19 @@ apiVersion: tekton.dev/v1alpha1
 kind: PipelineRun
 metadata:
   name: application-pipeline-run
-  namespace: tekton-pipeline-istio-project-1
+  namespace: tekton-pipeline-1
 spec:
   serviceAccountName: service-acc
   pipelineRef:
-    name: application-pipeline
-  resources:
-    - name: git-master
-      resourceRef:
-        name: git-master
-    - name: git-experimental
-      resourceRef:
-        name: git-experimental
+    name: stage-application-pipeline
+  workspaces:
+    - name: workspace
+      persistentVolumeClaim:
+        claimName: workspace
+  params:
+    - name: git-repo-name
+      value: "stage-backend"
+    - name: git-url
+      value: "https://github.com/beppevanrolleghem/stage-backend"
+    - name: branch
+      value: "master"

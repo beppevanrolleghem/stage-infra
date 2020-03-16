@@ -3,13 +3,12 @@ apiVersion: tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
   name: github-trigger-binding
+  namespace: tekton-pipeline-1
 spec:
   params:
   - name: gitrevision
-    value: $(body.repository.default_branch)
+    value: "$(body.head_commit.id)"
   - name: gitrepositoryurl
-    value: $(body.repository.clone_url)
+    value: "$(body.repository.clone_url)"
   - name: gitreponame
     value: $(body.repository.name)
-  - name: pipelinename
-    value: "pipeline for commit $(body.)"
