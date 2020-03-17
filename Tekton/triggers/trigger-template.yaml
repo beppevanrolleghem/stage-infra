@@ -13,6 +13,8 @@ spec:
       description: The git repository url
     - name: gitreponame
       description: the name of the git repository
+    - name: branch
+      description: the name of the branch pushed to
   resourcetemplates:
     - apiVersion: tekton.dev/v1alpha1
       kind: PipelineRun
@@ -31,6 +33,8 @@ spec:
           - name: git-url
             value: $(params.gitrepositoryurl)
           - name: branch
-            value: $(params.gitrevision)
+            value: $(params.branch)
           - name: git-repo-name
             value: $(params.gitreponame)
+          - name: revision
+            value: $(params.gitrevision)

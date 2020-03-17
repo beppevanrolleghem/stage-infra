@@ -31,3 +31,4 @@ spec:
         - "--dockerfile=/source/$(params.context)/dockerfile"
         - "--destination=beppev/$(params.image-name):$(params.version)"
         - "--context=/source/$(params.context)/"
+        - "--skip-tls-verify" #for speed reasons

@@ -10,6 +10,8 @@ spec:
       description: name of the git repo (used to determine the name of the image)
     - name: git-url
       description: url of the git repository to clone
+    - name: revision
+      description: revision to checkout
     - name: branch
       description: name of the master branch of the repository
   workspaces:
@@ -25,7 +27,7 @@ spec:
         - name: url
           value: $(params.git-url)
         - name: revision
-          value: $(params.branch)
+          value: $(params.revision)
     - name: build-and-push
       taskRef:
         name: build-and-push
