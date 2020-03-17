@@ -22,6 +22,7 @@ spec:
         serviceAccountName: service-acc
         pipelineRef:
           name: stage-application-pipeline
+        Timeout: "2h30m00s"
         workspaces:
         - name: workspace
           persistentVolumeClaim:

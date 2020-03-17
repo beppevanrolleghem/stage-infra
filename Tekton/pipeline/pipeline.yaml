@@ -38,6 +38,7 @@ spec:
               value: "$(params.git-repo-name)"
       runAfter:
         - clone
+      Timeout: "1h30m00s"
       workspaces:
         - name: source
           workspace: workspace

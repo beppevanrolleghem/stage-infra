@@ -16,6 +16,7 @@ spec:
               - push
       bindings:
         - name: github-trigger-binding
+        #- name: gitlab-trigger-binding
       template:
         name: github-trigger-template
 ---

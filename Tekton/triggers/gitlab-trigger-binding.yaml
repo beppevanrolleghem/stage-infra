@@ -1,0 +1,14 @@
+---
+apiVersion: tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: gitlab-trigger-binding
+  namespace: tekton-pipeline-1
+spec:
+  params:
+  - name: gitrevision
+    value: "$(body.project.default_branch)"
+  - name: gitrepositoryurl
+    value: "$(body.project.http_url)"
+  - name: gitreponame
+    value: $(body.project.name)
