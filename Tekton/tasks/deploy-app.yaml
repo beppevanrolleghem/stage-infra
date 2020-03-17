@@ -20,8 +20,8 @@ spec:
     - name: update-yaml
       image: alpine
       script: |
-        sed -i -e 's;DEPLOY_NAME;$(params.deploy-name);g' $(params.yaml-location)
-        sed -i -e 's;DEPLOY_VERSION;$(params.deploy-version);g' $(params.yaml-location)
+        sed -i -e 's;DEPLOY_NAME;$(params.deploy-name);g' /source/$(params.yaml-location)
+        sed -i -e 's;DEPLOY_VERSION;$(params.deploy-version);g' /source/$(params.yaml-location)
     - name: deploy-new-app
       image: lachlanevenson/k8s-kubectl
       command: ["kubectl"]
