@@ -1,0 +1,38 @@
+# ---
+# apiVersion: tekton.dev/v1beta1
+# kind: Pipeline
+# metadata:
+#   name: stage-application-pipeline
+#   namespace: tekton-pipeline-1
+# spec:
+#   params:
+#     - name: git-repo-full-name
+#       description: full name of the github repo (used for status updates)
+#     - name: sha
+#       description: used for github status updates
+#     - name: git-repo-name
+#       description: name of the git repo (used to determine the name of the image)
+#     - name: git-url
+#       description: url of the git repository to clone
+#     - name: revision
+#       description: revision to checkout
+#     - name: branch
+#       description: name of the branch to checkout
+#   workspaces:
+#     - name: workspace
+#   tasks:
+#     - name: clone
+#       taskRef:
+#         name: git-clone
+#       workspaces:
+#         - name: output
+#           workspace: workspace
+#       params:
+#         - name: url
+#           value: $(params.git-url)
+#         - name: revision
+#           value: $(params.revision)
+#     - name: build-gradle
+#       taskRef:
+#         name: build-image
+        

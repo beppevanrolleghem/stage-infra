@@ -3,7 +3,7 @@
 apiVersion: tekton.dev/v1alpha1
 kind: EventListener
 metadata:
-  name: github-event-listener
+  name: event-listener-frontend
   namespace: tekton-pipeline-1
 spec:
   serviceAccountName: service-acc
@@ -16,23 +16,202 @@ spec:
               - push
       bindings:
         - name: github-trigger-binding
-        #- name: gitlab-trigger-binding
       template:
-        name: github-trigger-template
+        name: front-end-trigger-template
+    - name: gitlab
+      interceptors:
+        - gitlab:
+            eventTypes:
+              - Push Hook
+      bindings:
+        - name: gitlab-trigger-binding
+      template:
+        name: front-end-trigger-template
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: manual-service
+  name: frontend-event-listener
   namespace: tekton-pipeline-1
 spec:
-  ports:
-  - name: http-listener
-    port: 8080
-    protocol: TCP
-    targetPort: 8080
+  type: NodePort
   selector:
-    app.kubernetes.io/managed-by: EventListener
-    app.kubernetes.io/part-of: Triggers
-    eventlistener: github-event-listener
-  type: LoadBalancer
+    eventlistener: event-listener-frontend
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: event-listener-backend
+  namespace: tekton-pipeline-1
+spec:
+  serviceAccountName: service-acc
+  triggers:
+    - name: github
+      interceptors:
+        - github:
+            eventTypes: 
+              - pull_request
+              - push
+      bindings:
+        - name: github-trigger-binding
+      template:
+        name: back-end-trigger-template
+    - name: gitlab
+      interceptors:
+        - gitlab:
+            eventTypes:
+              - Push Hook
+      bindings:
+        - name: gitlab-trigger-binding
+      template:
+        name: back-end-trigger-template
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-event-listener
+  namespace: tekton-pipeline-1
+spec:
+  type: NodePort
+  selector:
+    eventlistener: event-listener-backend
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: event-listener-mirror
+  namespace: tekton-pipeline-1
+spec:
+  serviceAccountName: service-acc
+  triggers:
+    - name: github
+      interceptors:
+        - github:
+            eventTypes: 
+              - pull_request
+              - push
+      bindings:
+        - name: github-trigger-binding
+      template:
+        name: mirror-trigger-template
+    - name: gitlab
+      interceptors:
+        - gitlab:
+            eventTypes:
+              - Push Hook
+      bindings:
+        - name: gitlab-trigger-binding
+      template:
+        name: mirror-trigger-template
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mirror-event-listener
+  namespace: tekton-pipeline-1
+spec:
+  type: NodePort
+  selector:
+    eventlistener: event-listener-mirror
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 
+
+---
+apiVersion: tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: event-listener-infra
+  namespace: tekton-pipeline-1
+spec:
+  serviceAccountName: service-acc
+  triggers:
+    - name: github
+      interceptors:
+        - github:
+            eventTypes: 
+              - pull_request
+              - push
+      bindings:
+        - name: github-trigger-binding
+      template:
+        name: infra-trigger-template
+    - name: gitlab
+      interceptors:
+        - gitlab:
+            eventTypes:
+              - Push Hook
+      bindings:
+        - name: gitlab-trigger-binding
+      template:
+        name: infra-trigger-template
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: infra-event-listener
+  namespace: tekton-pipeline-1
+spec:
+  type: NodePort
+  selector:
+    eventlistener: event-listener-infra
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: manual-service
+#   namespace: tekton-pipeline-1
+# spec:
+#   ports:
+#   - name: http-listener
+#     port: 8080
+#     protocol: TCP
+#     targetPort: 8080
+#   selector:
+#   type: LoadBalancer
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: event-listener-ingress
+  namespace: tekton-pipeline-1
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  rules:
+    - host: pipeline.llocal.host
+      http:
+        paths:
+          - path: /stage-frontend
+            backend:
+              serviceName: el-event-listener-frontend
+              servicePort: 8080
+          - path: /stage-backend
+            backend:
+              serviceName: el-event-listener-backend
+              servicePort: 8080
+          - path: /stage-mirror-service
+            backend:
+              serviceName: el-event-listener-mirror
+              servicePort: 8080
+          - path: /stage-infra
+            backend:
+              serviceName: el-event-listener-infra
+              servicePort: 8080
+          - path: /stage-test
+            backend:
+              serviceName: test-service
+              servicePort: 8080

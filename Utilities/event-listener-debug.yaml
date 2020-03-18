@@ -3,6 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: shell-demo
+  namespace: tekton-pipeline-1
 spec:
   replicas: 1
   selector:
@@ -10,12 +11,14 @@ spec:
       app.kubernetes.io/managed-by: EventListener
       app.kubernetes.io/part-of: Triggers
       eventlistener: github-event-listener
+      test: "true"
   template:
     metadata:
       labels:
         app.kubernetes.io/managed-by: EventListener
         app.kubernetes.io/part-of: Triggers
         eventlistener: github-event-listener
+        test: "true"
     spec:
       containers:
         - name: network-multitool
@@ -23,3 +26,23 @@ spec:
           imagePullPolicy: "Always"
           ports:
             - containerPort: 8080
+            - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-service
+  namespace: tekton-pipeline-1
+spec:
+  selector:
+    test: "true"
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080

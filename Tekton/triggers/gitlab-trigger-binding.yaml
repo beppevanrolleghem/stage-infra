@@ -12,3 +12,7 @@ spec:
     value: "$(body.project.http_url)"
   - name: gitreponame
     value: $(body.project.name)
+  - name: gitrepofullname
+    value: $(body.project.fullname)
+  - name: sha
+    value: $(body.project.sha)

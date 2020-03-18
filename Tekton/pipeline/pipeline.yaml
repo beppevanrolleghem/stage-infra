@@ -14,9 +14,14 @@ spec:
       description: revision to checkout
     - name: branch
       description: name of the master branch of the repository
+    - name: git-repo-full-name
+      description: full name of the github repo (used for status updates)
+    - name: sha
+      description: used for github status updates
   workspaces:
     - name: workspace
   tasks:
+
     - name: clone
       taskRef: 
         name: git-clone
@@ -28,6 +33,24 @@ spec:
           value: $(params.git-url)
         - name: revision
           value: $(params.revision)
+
+    # - name: set-status-building
+    #   taskRef:
+    #     name: github-set-status
+    #   runAfter:
+    #     - clone
+    #   params:
+    #     - name: REPO_FULL_NAME
+    #       value: $(params.git-repo-full-name)
+    #     - name: SHA
+    #       value: $(params.sha)
+    #     - name: STATE
+    #       value: pending
+    #     - name: TARGET_URL
+    #       value: http://ingress.llocal.host/$(params.git-repo-name)
+    #     - name: DESCRIPTION
+    #       value: "Build and push has started"
+
     - name: build-and-push
       taskRef:
         name: build-and-push
@@ -51,9 +74,29 @@ spec:
           value: "$(params.git-repo-name)"
         - name: version
           value: "$(params.branch)"
+
+    # - name: set-status-building
+    #   taskRef:
+    #     name: github-set-status
+    #   runAfter:
+    #     - build-and-push
+    #   params:
+    #     - name: REPO_FULL_NAME
+    #       value: $(params.git-repo-full-name)
+    #     - name: SHA
+    #       value: $(params.sha)
+    #     - name: STATE
+    #       value: pending
+    #     - name: TARGET_URL
+    #       value: http://ingress.llocal.host/$(params.git-repo-name)
+    #     - name: DESCRIPTION
+    #       value: "Build and push has completed, starting deploy-app"
+
     - name: deploy-app
       taskRef:
         name: deploy-app
+      runAfter:
+        - build-and-push
       workspaces:
         - name: source
           workspace: workspace
@@ -62,5 +105,21 @@ spec:
           value: "$(params.git-repo-name)"
         - name: deploy-version
           value: "$(params.branch)"
+          
+
+    - name: set-status-building
+      taskRef:
+        name: github-set-status
       runAfter:
-        - build-and-push
+        - deploy-app
+      params:
+        - name: REPO_FULL_NAME
+          value: $(params.git-repo-full-name)
+        - name: SHA
+          value: $(params.sha)
+        - name: STATE
+          value: success
+        - name: TARGET_URL
+          value: http://tekton.llocal.host/$(params.git-repo-name)
+        - name: DESCRIPTION
+          value: "Deploy finished"

@@ -14,3 +14,7 @@ spec:
     value: $(body.repository.name)
   - name: branch
     value: $(body.repository.default_branch)
+  - name: gitrepofullname
+    value: $(body.repository.full_name)
+  - name: sha
+    value: $(body.head_commit.id)

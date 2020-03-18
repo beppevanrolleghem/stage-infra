@@ -1,0 +1,19 @@
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: get-build-type
+  namespace: tekton-pipeline-1
+spec:
+  workspaces:
+    - name: source
+      mountpath: /source
+  results:
+    - name: build-type
+      description: Build type that will be used for the project
+  steps:
+    - name: check-build-type
+      image: bash:latest
+      script: |
+        #!/usr/bin/env bash
+        cat /source/build-type | tr '\n' '' | tee /tekton/results/build-type

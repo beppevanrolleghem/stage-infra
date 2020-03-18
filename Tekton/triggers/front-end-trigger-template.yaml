@@ -1,0 +1,48 @@
+---
+apiVersion: tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: front-end-trigger-template
+  namespace: tekton-pipeline-1
+spec:
+  params:
+    - name: gitrevision
+      description: The git revision
+      default: master
+    - name: gitrepositoryurl
+      description: The git repository url
+    - name: gitreponame
+      description: the name of the git repository
+    - name: branch
+      description: the name of the branch pushed to
+    - name: gitrepofullname
+      description: used for github status updates
+    - name: sha
+      description: used for github status updates
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1alpha1
+      kind: PipelineRun
+      metadata:
+        generateName: front-end-pipeline-run-
+      spec:
+        serviceAccountName: service-acc
+        pipelineRef:
+          name: stage-application-pipeline
+        Timeout: "2h30m00s"
+        workspaces:
+        - name: workspace
+          persistentVolumeClaim:
+            claimName: workspace
+        params:
+          - name: git-url
+            value: $(params.gitrepositoryurl)
+          - name: branch
+            value: $(params.branch)
+          - name: git-repo-name
+            value: $(params.gitreponame)
+          - name: revision
+            value: $(params.gitrevision)
+          - name: sha
+            value: $(params.sha)
+          - name: git-repo-full-name
+            value: $(params.gitrepofullname)
