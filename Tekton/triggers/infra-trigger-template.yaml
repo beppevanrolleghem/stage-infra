@@ -27,8 +27,8 @@ spec:
       spec:
         serviceAccountName: service-acc
         pipelineRef:
-          name: stage-application-pipeline
-        Timeout: "2h30m00s"
+          name: infra-pipeline
+        Timeout: "30m00s"
         workspaces:
         - name: workspace
           persistentVolumeClaim:
@@ -42,7 +42,5 @@ spec:
             value: $(params.gitreponame)
           - name: revision
             value: $(params.gitrevision)
-          - name: sha
-            value: $(params.sha)
           - name: git-repo-full-name
             value: $(params.gitrepofullname)

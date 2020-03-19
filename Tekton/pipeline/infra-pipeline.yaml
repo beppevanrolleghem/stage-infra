@@ -1,0 +1,87 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: infra-pipeline
+  namespace: tekton-pipeline-1
+spec:
+  params:
+    - name: git-repo-name
+      description: name of the git repo (used to determine the name of the image)
+    - name: git-url
+      description: url of the git repository to clone
+    - name: revision
+      description: revision to check out
+    - name: branch
+      description: name of the master branch of the repository
+    - name: git-repo-full-name
+      description: full name of the github repo (used for status updates)
+  workspaces:
+    - name: workspace
+  tasks:
+
+    - name: clone-git-repo
+      taskRef:
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: workspace
+      params:
+        - name: url
+          value: $(params.git-url)
+        - name: revision 
+          value: $(params.revision)
+
+    - name: set-begun-status
+      taskRef:
+        name: github-set-status
+      runAfter:
+        - clone-git-repo
+      params:
+        - name: REPO_FULL_NAME
+          value: $(params.git-repo-full-name)
+        - name: SHA
+          value: $(params.revision)
+        - name: TARGET_URL
+          value: tekton.llocal.host/dashboard
+        - name: STATE
+          value: pending
+        - name: DESCRIPTION
+          value: "Deploy to cluster has started (will not complete if this is not master branch)"
+
+    - name: deploy-infrastructure
+      taskRef:
+        name: deploy-app
+      runAfter:
+        - clone-git-repo
+      workspaces:
+        - name: source
+          workspace: workspace
+      params:
+        - name: yaml-location
+          value: infra/
+      conditions:
+        - conditionRef: "is-not-equal"
+          params:
+            - name: "left"
+              value: "master"
+            - name: "right"
+              value: "$(params.branch)"
+
+    - name: set-finished-state
+      taskRef:
+        name: github-set-status
+      runAfter:
+        - deploy-infrastructure
+        - set-begun-status
+      params:
+      - name: REPO_FULL_NAME
+        value: $(params.git-repo-full-name)
+      - name: SHA
+        value: $(params.revision)
+      - name: TARGET_URL
+        value: tekton.llocal.host/dashboard
+      - name: STATE
+        value: success
+      - name: DESCRIPTION
+        value: "deployment applied"

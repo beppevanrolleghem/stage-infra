@@ -12,7 +12,9 @@ spec:
     - name: command
       default: apply
     - name: deploy-name
+      default: ""
     - name: deploy-version
+      default: ""
   workspaces:
     - name: source
       mountpath: /source
