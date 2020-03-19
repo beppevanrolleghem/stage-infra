@@ -42,7 +42,5 @@ spec:
             value: $(params.gitreponame)
           - name: revision
             value: $(params.gitrevision)
-          - name: sha
-            value: $(params.sha)
           - name: git-repo-full-name
             value: $(params.gitrepofullname)

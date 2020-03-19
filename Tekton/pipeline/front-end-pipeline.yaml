@@ -1,38 +1,113 @@
-# ---
-# apiVersion: tekton.dev/v1beta1
-# kind: Pipeline
-# metadata:
-#   name: stage-application-pipeline
-#   namespace: tekton-pipeline-1
-# spec:
-#   params:
-#     - name: git-repo-full-name
-#       description: full name of the github repo (used for status updates)
-#     - name: sha
-#       description: used for github status updates
-#     - name: git-repo-name
-#       description: name of the git repo (used to determine the name of the image)
-#     - name: git-url
-#       description: url of the git repository to clone
-#     - name: revision
-#       description: revision to checkout
-#     - name: branch
-#       description: name of the branch to checkout
-#   workspaces:
-#     - name: workspace
-#   tasks:
-#     - name: clone
-#       taskRef:
-#         name: git-clone
-#       workspaces:
-#         - name: output
-#           workspace: workspace
-#       params:
-#         - name: url
-#           value: $(params.git-url)
-#         - name: revision
-#           value: $(params.revision)
-#     - name: build-gradle
-#       taskRef:
-#         name: build-image
-        
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: stage-application-pipeline
+  namespace: tekton-pipeline-1
+spec:
+  params:
+    - name: git-repo-full-name
+      description: full name of the github repo (used for status updates)
+    - name: git-repo-name
+      description: name of the git repo (used to determine the name of the image)
+    - name: git-url
+      description: url of the git repository to clone
+    - name: revision
+      description: revision to checkout
+    - name: branch
+      description: name of the branch to checkout
+  workspaces:
+    - name: workspace
+  tasks:
+    - name: clone
+      taskRef:
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: workspace
+      params:
+        - name: url
+          value: $(params.git-url)
+        - name: revision
+          value: $(params.revision)
+
+
+    - name: set-begun-status
+      taskRef:
+        name: github-set-status
+      runAfter:
+        - clone
+      params:
+        - name: REPO_FULL_NAME
+          value: $(params.git-repo-full-name)
+        - name: SHA
+          value: $(params.revision)
+        - name: TARGET_URL
+          value: tekton.llocal.host/dashboard
+        - name: STATE
+          value: pending
+        - name: DESCRIPTION
+          value: "Build of maven file has started"
+
+    - name: build-and-push-maven
+      taskRef:
+        name: build-maven
+      runAfter:
+        - clone
+      params:
+        - name: image-name
+          value: $(params.git-repo-name)
+        - name: image-tag
+          value: $(params.branch)
+      workspaces:
+        - name: output
+          workspace: workspace
+
+    - name: set-build-finshed-status
+      taskRef:
+        name: github-set-status
+      runAfter:
+        - build-and-push-maven
+      params:
+        - name: REPO_FULL_NAME
+          value: $(params.git-repo-full-name)
+        - name: SHA
+          value: $(params.revision)
+        - name: TARGET_URL
+          value: tekton.llocal.host/dashboard
+        - name: STATE
+          value: pending
+        - name: DESCRIPTION
+          value: "build and push has finished, now starting deployment"
+
+
+    - name: deploy-app
+      taskRef:
+        name: deploy-app
+      runAfter:
+        - build-and-push-maven
+      workspaces:
+        - name: source
+          workspace: workspace
+      params:
+        - name: deploy-name
+          value: "$(params.git-repo-name)"
+        - name: deploy-version
+          value: "$(params.branch)"
+
+    - name: set-deploy-finished-status
+      taskRef:
+        name: github-set-status
+      runAfter:
+        - deploy-app
+      params:
+        - name: REPO_FULL_NAME
+          value: $(params.git-repo-full-name)
+        - name: SHA
+          value: $(params.revision)
+        - name: TARGET_URL
+          value: tekton.llocal.host/dashboard
+        - name: STATE
+          value: success
+        - name: DESCRIPTION
+          value: "deploy finished"
