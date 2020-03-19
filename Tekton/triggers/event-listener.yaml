@@ -3,7 +3,7 @@
 apiVersion: tekton.dev/v1alpha1
 kind: EventListener
 metadata:
-  name: event-listener-frontend
+  name: event-listener-github
   namespace: tekton-pipeline-1
 spec:
   serviceAccountName: service-acc
@@ -17,26 +17,17 @@ spec:
       bindings:
         - name: github-trigger-binding
       template:
-        name: front-end-trigger-template
-    - name: gitlab
-      interceptors:
-        - gitlab:
-            eventTypes:
-              - Push Hook
-      bindings:
-        - name: gitlab-trigger-binding
-      template:
-        name: front-end-trigger-template
+        name: github-trigger-template
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: frontend-event-listener
+  name: github-event-listener
   namespace: tekton-pipeline-1
 spec:
   type: NodePort
   selector:
-    eventlistener: event-listener-frontend
+    eventlistener: event-listener-github
   ports:
     - protocol: TCP
       port: 8080
@@ -45,21 +36,11 @@ spec:
 apiVersion: tekton.dev/v1alpha1
 kind: EventListener
 metadata:
-  name: event-listener-backend
+  name: event-listener-gitlab
   namespace: tekton-pipeline-1
 spec:
   serviceAccountName: service-acc
   triggers:
-    - name: github
-      interceptors:
-        - github:
-            eventTypes: 
-              - pull_request
-              - push
-      bindings:
-        - name: github-trigger-binding
-      template:
-        name: back-end-trigger-template
     - name: gitlab
       interceptors:
         - gitlab:
@@ -68,64 +49,21 @@ spec:
       bindings:
         - name: gitlab-trigger-binding
       template:
-        name: back-end-trigger-template
+        name: github-trigger-template
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: backend-event-listener
+  name: gitlab-event-listener
   namespace: tekton-pipeline-1
 spec:
   type: NodePort
   selector:
-    eventlistener: event-listener-backend
+    eventlistener: event-listener-gitlab
   ports:
     - protocol: TCP
       port: 8080
       targetPort: 8080
----
-apiVersion: tekton.dev/v1alpha1
-kind: EventListener
-metadata:
-  name: event-listener-mirror
-  namespace: tekton-pipeline-1
-spec:
-  serviceAccountName: service-acc
-  triggers:
-    - name: github
-      interceptors:
-        - github:
-            eventTypes: 
-              - pull_request
-              - push
-      bindings:
-        - name: github-trigger-binding
-      template:
-        name: mirror-trigger-template
-    - name: gitlab
-      interceptors:
-        - gitlab:
-            eventTypes:
-              - Push Hook
-      bindings:
-        - name: gitlab-trigger-binding
-      template:
-        name: mirror-trigger-template
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: mirror-event-listener
-  namespace: tekton-pipeline-1
-spec:
-  type: NodePort
-  selector:
-    eventlistener: event-listener-mirror
-  ports:
-    - protocol: TCP
-      port: 8080
-      targetPort: 
-
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: EventListener
@@ -195,17 +133,13 @@ spec:
     - host: pipeline.llocal.host
       http:
         paths:
-          - path: /stage-frontend
+          - path: /stage-github
             backend:
-              serviceName: el-event-listener-frontend
+              serviceName: el-event-listener-github
               servicePort: 8080
-          - path: /stage-backend
+          - path: /stage-gitlab
             backend:
-              serviceName: el-event-listener-backend
-              servicePort: 8080
-          - path: /stage-mirror-service
-            backend:
-              serviceName: el-event-listener-mirror
+              serviceName: el-event-listener-gitlab
               servicePort: 8080
           - path: /stage-infra
             backend:

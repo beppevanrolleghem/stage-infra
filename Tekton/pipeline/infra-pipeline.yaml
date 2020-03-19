@@ -2,7 +2,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
-  name: infra-pipeline
+  name: infrastructure-pipeline
   namespace: tekton-pipeline-1
 spec:
   params:
@@ -51,7 +51,7 @@ spec:
 
     - name: deploy-infrastructure
       taskRef:
-        name: deploy-app
+        name: deploy-to-cluster
       runAfter:
         - clone-git-repo
       workspaces:
@@ -61,7 +61,7 @@ spec:
         - name: yaml-location
           value: infra/
       conditions:
-        - conditionRef: "is-not-equal"
+        - conditionRef: "is-equal"
           params:
             - name: "left"
               value: "master"

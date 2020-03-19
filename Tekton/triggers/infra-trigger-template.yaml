@@ -17,8 +17,6 @@ spec:
       description: the name of the branch pushed to
     - name: gitrepofullname
       description: used for github status updates
-    - name: sha
-      description: used for github status updates
   resourcetemplates:
     - apiVersion: tekton.dev/v1alpha1
       kind: PipelineRun

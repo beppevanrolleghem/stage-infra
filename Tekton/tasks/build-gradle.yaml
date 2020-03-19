@@ -1,39 +1,35 @@
 apiVersion: tekton.dev/v1alpha1
 kind: Task
 metadata:
-  name: jib-gradle
+  name: build-gradle
   namespace: tekton-pipeline-1
 spec:
-  inputs:
-    params:
-    - name: build-type
-      description: build type used to check to actually execute this step
-      default: gradle
-    - name: DIRECTORY
-      description: The directory containing the app, relative to the source repository root
-      default: .
-    - name: CACHE
-      description: The name of the volume for caching Gradle artifacts, local Maven repository, and base image layers
-      default: empty-dir-volume
-    - name: INSECUREREGISTRY
-      description: Whether to allow insecure registry
-      default: "false"
-    resources:
+  params:
+  - name: build-type
+    description: build type used to check to actually execute this step
+    default: gradle
+  - name: DIRECTORY
+    description: The directory containing the app, relative to the source repository root
+    default: .
+  - name: CACHE
+    description: The name of the volume for caching Gradle artifacts, local Maven repository, and base image layers
+    default: empty-dir-volume
+  - name: INSECUREREGISTRY
+    description: Whether to allow insecure registry
+    default: "false"
+  - name: image-name
+    description: name of the image after push
+  - name: image-tag
+    description: tag of the image after push
+  workspaces:
     - name: source
-      type: git
-  outputs:
-    resources:
-    - name: image
-      type: image
+      mountPath: /source
   steps:
   - name: build-and-push
     image: gcr.io/cloud-builders/gradle
     script: |
       #!/bin/sh
-      if [ $(inputs.params.build-type) != gradle]
-      then
-        exit 0
-      fi
+      cd /source
       set -o errexit
       # Adds Gradle init script that applies the Jib Gradle plugin.
       echo "initscript {
@@ -53,21 +49,25 @@ spec:
         --init-script=/tekton/home/init-script.gradle \
         -Duser.home=/tekton/home \
         -Dgradle.user.home=/tekton/home/.gradle \
-        -Djib.allowInsecureRegistries=$(inputs.params.INSECUREREGISTRY) \
-        -Djib.to.image=$(outputs.resources.image.url)
+        -Djib.allowInsecureRegistries=$(params.INSECUREREGISTRY) \
+        -Djib.to.image=docker.io/beppev/$(params.image-name):$(params.image-tag) \
+        -Djib.from.auth.username=beppev
+        -Djib.from.auth.password=Azerty123
+        -Djib.to.auth.username=beppev
+        -Djib.to.auth.password=Azerty123
       exit 0
-    workingDir: /workspace/source/$(inputs.params.DIRECTORY)
+    workingDir: /workspace/source/$(params.DIRECTORY)
     volumeMounts:
-    - name: $(inputs.params.CACHE)
+    - name: $(params.CACHE)
       mountPath: /tekton/home/.gradle/caches
       subPath: gradle-caches
-    - name: $(inputs.params.CACHE)
+    - name: $(params.CACHE)
       mountPath: /tekton/home/.gradle/wrapper
       subPath: gradle-wrapper
-    - name: $(inputs.params.CACHE)
+    - name: $(params.CACHE)
       mountPath: /tekton/home/.m2
       subPath: m2-cache
-    - name: $(inputs.params.CACHE)
+    - name: $(params.CACHE)
       mountPath: /tekton/home/.cache
       subPath: jib-cache
     securityContext:

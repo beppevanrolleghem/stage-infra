@@ -3,7 +3,7 @@
 apiVersion: tekton.dev/v1alpha1
 kind: Task
 metadata:
-  name: deploy-app
+  name: deploy-yaml-file
   namespace: tekton-pipeline-1
 spec:
   params:
@@ -19,15 +19,27 @@ spec:
     - name: source
       mountpath: /source
   steps:
-    - name: update-yaml
-      image: alpine
-      script: |
-        sed -i -e 's;DEPLOY_NAME;$(params.deploy-name);g' /source/$(params.yaml-location)
-        sed -i -e 's;DEPLOY_VERSION;$(params.deploy-version);g' /source/$(params.yaml-location)
     - name: deploy-new-app
       image: lachlanevenson/k8s-kubectl
-      command: ["kubectl"]
-      args:
-        - "$(params.command)"
-        - "-f"
-        - "/source/$(params.yaml-location)"
+      script: |
+        sed -i -e 's;DEPLOY_NAME;$(params.deploy-name);g' /source/$(params.yaml-location)
+        if [ "$?" != 0 ]; then
+          echo "failure" | tee /tekton/results/state
+          echo "replacing deploy name in yaml file failed, please check if the yaml file is in the correct location ($(params.yaml-location))" | tee /tekton/results/description
+          exit 0
+        fi
+        sed -i -e 's;DEPLOY_VERSION;$(params.deploy-version);g' /source/$(params.yaml-location)
+        if [ "$?" != 0 ]; then
+          echo "failure" | tee /tekton/results/state
+          echo "replacing deploy version in yaml file failed, please check if the yaml file is in the correct location ($(params.yaml-location))" | tee /tekton/results/description
+          exit 0
+        fi
+        kubectl $(params.command) -f /source/$(params.yaml-location)
+        if [ "$?" != 0 ]; then
+          echo "failure" | tee /tekton/results/state
+          echo "failure applying yaml file to cluster ($(params.yaml-location))" | tee /tekton/results/description
+        else
+          echo "success" | tee /tekton/results/state
+          echo "deployed the yaml files to the cluster"
+        fi
+        exit 0

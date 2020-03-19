@@ -25,10 +25,17 @@ spec:
       env:
         - name: "DOCKER_CONFIG"
           value: "/tekton/home/.docker/"
-      command:
-        - /kaniko/executor
-      args:
-        - "--dockerfile=/source/$(params.context)/dockerfile"
-        - "--destination=beppev/$(params.image-name):$(params.version)"
-        - "--context=/source/$(params.context)/"
-        - "--skip-tls-verify" #for speed reasons
+      script: |
+        #!/usr/bin/env bash
+        /kaniko/executor \
+        --dockerfile=/source/$(params.context)/dockerfile \
+        --destination=beppev/$(params.image-name):$(params.version) \
+        --context=/source/$(params.context)/ --skip-tls-verify
+        if [ "$?" = 0 ]; then
+          echo "pending" | tee /tekton/results/state
+          echo "build and push successful" | tee /tekton/results/description
+        else
+          echo "failure" | tee /tekton/results/state
+          echo "build and push were not successful use kubectl or tkn or tekton dashboard to see logs" | tee /tekton/results/description
+        fi
+        exit 0

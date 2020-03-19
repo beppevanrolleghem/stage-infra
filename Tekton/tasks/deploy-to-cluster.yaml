@@ -1,0 +1,28 @@
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Task #this can be used to deploy a folder aswell as a file, but no replacing the names or versions
+metadata:
+  name: deploy-to-cluster
+  namespace: tekton-pipeline-1
+spec:
+  params:
+    - name: yaml-location
+      default: infra/
+    - name: command
+      default: apply
+  workspaces:
+    - name: source
+      mountpath: /source
+  steps:
+    - name: deploy-new-app
+      image: lachlanevenson/k8s-kubectl
+      script: |
+        kubectl $(params.command) -f /source/$(params.yaml-location)
+        if [ "$?" != 0 ]; then
+          echo "failure" | tee /tekton/results/state
+          echo "failure applying yaml file to cluster ($(params.yaml-location))" | tee /tekton/results/description
+        else
+          echo "success" | tee /tekton/results/state
+          echo "deployed the yaml files to the cluster"
+        fi
+        exit 0

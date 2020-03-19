@@ -2,7 +2,7 @@
 apiVersion: tekton.dev/v1alpha1
 kind: TriggerTemplate
 metadata:
-  name: front-end-trigger-template
+  name: github-trigger-template
   namespace: tekton-pipeline-1
 spec:
   params:
@@ -17,17 +17,15 @@ spec:
       description: the name of the branch pushed to
     - name: gitrepofullname
       description: used for github status updates
-    - name: sha
-      description: used for github status updates
   resourcetemplates:
     - apiVersion: tekton.dev/v1alpha1
       kind: PipelineRun
       metadata:
-        generateName: front-end-pipeline-run-
+        generateName: application-pipeline-run-
       spec:
         serviceAccountName: service-acc
         pipelineRef:
-          name: stage-application-pipeline
+          name: application-pipeline
         Timeout: "2h30m00s"
         workspaces:
         - name: workspace
