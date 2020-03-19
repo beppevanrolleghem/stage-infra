@@ -26,7 +26,6 @@ spec:
     image: gcr.io/cloud-builders/mvn
     command:
     - mvn
-    - -o
     - -B
     - compile
     - com.google.cloud.tools:jib-maven-plugin:build
