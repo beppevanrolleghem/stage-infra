@@ -26,6 +26,7 @@ spec:
     image: gcr.io/cloud-builders/mvn
     command:
     - mvn
+    - -o
     - -B
     - compile
     - com.google.cloud.tools:jib-maven-plugin:build
@@ -34,8 +35,8 @@ spec:
     - -Djib.to.image=docker.io/beppev/$(params.image-name):$(params.image-tag)
     - -Djib.from.auth.username=
     - -Djib.from.auth.password=
-    - -Djib.from.auth.username=
-    - -Djib.from.auth.password=
+    - -Djib.to.auth.username=
+    - -Djib.to.auth.password=
     workingDir: /source/$(params.DIRECTORY)
     volumeMounts:
     - name: $(params.CACHE)
