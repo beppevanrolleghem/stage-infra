@@ -13,6 +13,11 @@ spec:
   workspaces:
     - name: source
       mountpath: /source
+  results:
+    - name: state
+      description: state of the next github update
+    - name: description
+      description: description of the next github updated
   steps:
     - name: deploy-new-app
       image: lachlanevenson/k8s-kubectl

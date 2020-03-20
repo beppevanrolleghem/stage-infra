@@ -1,15 +1,80 @@
+# ---
+# apiVersion: tekton.dev/v1alpha1
+# kind: Task
+# metadata:
+#   name: buildah
+# spec:
+#   inputs:
+#     params:
+#     - name: BUILDER_IMAGE
+#       description: The location of the buildah builder image.
+#       default: quay.io/buildah/stable:v1.11.0
+#     - name: DOCKERFILE
+#       description: Path to the Dockerfile to build.
+#       default: ./Dockerfile
+#     - name: CONTEXT
+#       description: Path to the directory to use as context.
+#       default: .
+#     - name: TLSVERIFY
+#       description: Verify the TLS on the registry endpoint (for push/pull to a non-TLS registry)
+#       default: "true"
+#     - name: FORMAT
+#       description: The format of the built container, oci or docker
+#       default: "oci"
+
+#     resources:
+#     - name: source
+#       type: git
+
+#   outputs:
+#     resources:
+#     - name: image
+#       type: image
+
+#   steps:
+#   - name: build
+#     image: $(inputs.params.BUILDER_IMAGE)
+#     workingDir: /workspace/source
+#     command: ['buildah', 'bud', '--format=$(inputs.params.FORMAT)', '--tls-verify=$(inputs.params.TLSVERIFY)', '--layers', '-f', '$(inputs.params.DOCKERFILE)', '-t', '$(outputs.resources.image.url)', '$(inputs.params.CONTEXT)']
+#     volumeMounts:
+#     - name: varlibcontainers
+#       mountPath: /var/lib/containers
+#     securityContext:
+#       privileged: true
+
+#   - name: push
+#     image: $(inputs.params.BUILDER_IMAGE)
+#     workingDir: /workspace/source
+#     command: ['buildah', 'push', '--tls-verify=$(inputs.params.TLSVERIFY)', '$(outputs.resources.image.url)', 'docker://$(outputs.resources.image.url)']
+#     volumeMounts:
+#     - name: varlibcontainers
+#       mountPath: /var/lib/containers
+#     securityContext:
+#       privileged: true
+
+#   volumes:
+#   - name: varlibcontainers
+#     emptyDir: {}
+
+
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: Task
 metadata:
   name: build-and-push
-  namespace: tekton-pipeline-1
 spec:
   params:
   - name: context
-    description: The path to the build context, used by Kaniko - within the workspace
+    description: location of dockerfile etc
     default: .
-    type: string
+  - name: DOCKERFILE
+    description: The name of the Dockerfile
+    default: "Dockerfile"
+  - name: BUILDKIT_IMAGE
+    description: The name of the BuildKit image
+    # The image needs to be rootful because Tekton creates /builder/home/.docker/config.json owned by root:root with 0600
+    # https://github.com/tektoncd/pipeline/issues/852
+    default: "moby/buildkit:v0.6.2"
   - name: image-name
     description: dockerhub url
     type: string
@@ -19,23 +84,76 @@ spec:
   workspaces:
   - name: source
     mountpath: /source
+  results:
+    - name: state
+      description: state of the next github update
+    - name: description
+      description: description of the next github update
+
   steps:
-    - name: build-and-push
-      image: gcr.io/kaniko-project/executor
-      env:
-        - name: "DOCKER_CONFIG"
-          value: "/tekton/home/.docker/"
-      script: |
-        #!/usr/bin/env bash
-        /kaniko/executor \
-        --dockerfile=/source/$(params.context)/dockerfile \
-        --destination=beppev/$(params.image-name):$(params.version) \
-        --context=/source/$(params.context)/ --skip-tls-verify
-        if [ "$?" = 0 ]; then
-          echo "pending" | tee /tekton/results/state
-          echo "build and push successful" | tee /tekton/results/description
-        else
-          echo "failure" | tee /tekton/results/state
-          echo "build and push were not successful use kubectl or tkn or tekton dashboard to see logs" | tee /tekton/results/description
-        fi
-        exit 0
+  - name: build-and-push
+    image: $(inputs.params.BUILDKIT_IMAGE)
+    env:
+      - name: "DOCKER_CONFIG"
+        value: "/tekton/home/.docker/"
+    workingDir: /source
+    securityContext:
+      privileged: true
+    script: |
+      #!/bin/sh
+      cd $(params.context) && buildctl-daemonless.sh --debug build --progress=plain --frontend=dockerfile.v0 --opt filename=dockerfile --local context=.. --local dockerfile=. --output type=image,name=beppev/$(params.image-name):$(params.version)
+      if [ "$?" = 0 ]; then
+        echo "pending" > /tekton/results/state
+        echo "build and push successful" > /tekton/results/description
+      else
+        echo "failure" | tee /tekton/results/state
+        echo "build and push were not successful use kubectl or tkn or tekton dashboard to see logs" > /tekton/results/description
+      fi
+
+---
+# apiVersion: tekton.dev/v1alpha1
+# kind: Task
+# metadata:
+#   name: build-and-push
+#   namespace: tekton-pipeline-1
+# spec:
+#   params:
+#   - name: context
+#     description: The path to the build context, used by Kaniko - within the workspace
+#     default: .
+#     type: string
+#   - name: image-name
+#     description: dockerhub url
+#     type: string
+#   - name: version
+#     description: image-version (for instance latest or beta)
+#     type: string
+#   workspaces:
+#   - name: source
+#     mountpath: /source
+#   results:
+#     - name: state
+#       description: state of the next github update
+#     - name: description
+#       description: description of the next github update
+#   steps:
+#     - name: build-and-push
+#       image: gcr.io/kaniko-project/executor:debug #normal kaniko doesnt have a shell, so it doesnt allow us to use scripting to update the github status
+#       env:
+#         - name: "DOCKER_CONFIG"
+#           value: "/tekton/home/.docker/"
+#       securityContext:
+#         runAsUser: 0
+#       script: |
+#         #!/bin/sh
+#         echo "test"
+#         /kaniko/executor --dockerfile=/source/$(params.context)/dockerfile --destination=beppev/$(params.image-name):$(params.version) --context=/source/$(params.context)/ --skip-tls-verify
+#         if [ "$?" = 0 ]; then
+#           echo "pending" | tee /tekton/results/state
+#           echo "build and push successful" | tee /tekton/results/description
+#         else
+#           echo "failure" | tee /tekton/results/state
+#           echo "build and push were not successful use kubectl or tkn or tekton dashboard to see logs" | tee /tekton/results/description
+#         fi
+#         exit 0
+---
