@@ -89,15 +89,6 @@ spec:
         name: deploy-yaml-file
       runAfter:
         - build-and-push
-      conditions:
-        
-        - conditionRef: is-not-equal
-          params:
-            - name: left
-              value: "failure"
-            - name: right
-              value: "$(tasks.build-and-push.results.state)"
-
       workspaces:
         - name: source
           workspace: workspace
@@ -107,20 +98,3 @@ spec:
         - name: deploy-version
           value: "$(params.branch)"
           
-
-    - name: set-status-finished
-      taskRef:
-        name: github-set-status
-      runAfter:
-        - deploy-app
-      params:
-        - name: REPO_FULL_NAME
-          value: $(params.git-repo-full-name)
-        - name: SHA
-          value: $(params.revision)
-        - name: STATE
-          value: "$(tasks.deploy-app.results.state)"
-        - name: TARGET_URL
-          value: http://tekton.llocal.host/$(params.git-repo-name)
-        - name: DESCRIPTION
-          value: "$(tasks.deploy-app.results.description)"

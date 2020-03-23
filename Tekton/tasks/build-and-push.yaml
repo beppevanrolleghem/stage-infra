@@ -39,8 +39,8 @@ spec:
             echo "test"
             /kaniko/executor --dockerfile=/source/$(params.context)/dockerfile --destination=beppev/$(params.image-name):$(params.version) --context=/source/$(params.context)/ --skip-tls-verify --skip-tls-verify-pull
             if [ "$?" = 0 ]; then
-              printf "pending" > /tekton/results/state
-              printf "build and push successful" > /tekton/results/description
+              printf "success" > /tekton/results/state
+              printf "build and push successful, going on to publish build" > /tekton/results/description
             else
               printf "failure" > /tekton/results/state
               printf "build and push were not successful use kubectl or tkn or tekton dashboard to see logs" > /tekton/results/description
