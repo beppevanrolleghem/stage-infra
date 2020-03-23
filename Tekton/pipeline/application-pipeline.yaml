@@ -78,11 +78,11 @@ spec:
         - name: SHA
           value: $(params.revision)
         - name: STATE
-          value: $(tasks.build-and-push.results.state)
+          value: "$(tasks.build-and-push.results.state)"
         - name: TARGET_URL
           value: http://ingress.llocal.host/$(params.git-repo-name)
         - name: DESCRIPTION
-          value: $(tasks.build-and-push.results.description)
+          value: "$(tasks.build-and-push.results.description)"
 
     - name: deploy-app
       taskRef:
@@ -125,7 +125,7 @@ spec:
         - name: SHA
           value: $(params.revision)
         - name: STATE
-          value: $(tasks.deploy-app.results.state)
+          value: "$(tasks.deploy-app.results.state)"
         - name: TARGET_URL
           value: http://tekton.llocal.host/$(params.git-repo-name)
         - name: DESCRIPTION

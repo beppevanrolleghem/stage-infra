@@ -29,22 +29,22 @@ spec:
       script: |
         sed -i -e 's;DEPLOY_NAME;$(params.deploy-name);g' /source/$(params.yaml-location)
         if [ "$?" != 0 ]; then
-          echo "failure" | tee /tekton/results/state
-          echo "replacing deploy name in yaml file failed, please check if the yaml file is in the correct location ($(params.yaml-location))" | tee /tekton/results/description
+          printf "failure" > /tekton/results/state
+          printf "replacing deploy name in yaml file failed, please check if the yaml file is in the correct location ($(params.yaml-location))" > /tekton/results/description
           exit 0
         fi
         sed -i -e 's;DEPLOY_VERSION;$(params.deploy-version);g' /source/$(params.yaml-location)
         if [ "$?" != 0 ]; then
-          echo "failure" | tee /tekton/results/state
-          echo "replacing deploy version in yaml file failed, please check if the yaml file is in the correct location ($(params.yaml-location))" | tee /tekton/results/description
+          printf "failure" > /tekton/results/state
+          printf "replacing deploy version in yaml file failed, please check if the yaml file is in the correct location ($(params.yaml-location))" > /tekton/results/description
           exit 0
         fi
         kubectl $(params.command) -f /source/$(params.yaml-location)
         if [ "$?" != 0 ]; then
-          echo "failure" | tee /tekton/results/state
-          echo "failure applying yaml file to cluster ($(params.yaml-location))" | tee /tekton/results/description
+          printf "failure" > /tekton/results/state
+          printf "failure applying yaml file to cluster ($(params.yaml-location))" > /tekton/results/description
         else
-          echo "success" | tee /tekton/results/state
-          echo "deployed the yaml files to the cluster"
+          printf "success" > /tekton/results/state
+          printf "deployed the yaml files to the cluster"
         fi
         exit 0
