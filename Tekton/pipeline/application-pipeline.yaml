@@ -90,13 +90,7 @@ spec:
       runAfter:
         - build-and-push
       conditions:
-        - conditionRef: is-not-equal
-          params:
-            - name: left
-              value: "error"
-            - name: right
-              value: "$(tasks.build-and-push.results.state)"
-
+        
         - conditionRef: is-not-equal
           params:
             - name: left

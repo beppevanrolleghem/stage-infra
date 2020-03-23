@@ -2,7 +2,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
-  name: infrastructure-pipeline
+  name: infra-pipeline
   namespace: tekton-pipeline-1
 spec:
   params:
