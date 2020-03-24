@@ -39,6 +39,10 @@ spec:
           printf "replacing deploy version in yaml file failed, please check if the yaml file is in the correct location ($(params.yaml-location))" > /tekton/results/description
           exit 0
         fi
+        kubectl delete -f /source/$(params.yaml-location)
+        if [ "$?" != 0 ]; then
+          echo "nothting to worry abt, just means its been manually deleted before this was run"
+        fi
         kubectl $(params.command) -f /source/$(params.yaml-location)
         if [ "$?" != 0 ]; then
           printf "failure" > /tekton/results/state
